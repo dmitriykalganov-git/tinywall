@@ -38,7 +38,7 @@ echo $"Learn mode..."
 
 cat /etc/hosts > /tmp/hostscache
 
-tail -n 1 -f /var/log/syslog | while read string
+tail -n 1 -f /var/log/tinywall | while read string
 do
     echo $string | grep "TINYWALL.*REJECT" > /dev/null || continue
     unset PROTO HPROTO HSPROTO DST SPT
