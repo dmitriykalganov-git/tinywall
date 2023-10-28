@@ -1,6 +1,5 @@
 #!/bin/sh
 
-route add -net 192.168.254.0/24 gw 192.168.4.3 || true
-
+#route add -net 192.168.254.0/24 gw 192.168.4.3 || true
 
 exit 0
