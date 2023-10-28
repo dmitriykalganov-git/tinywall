@@ -1,0 +1,10 @@
+#!/bin/sh
+
+#SSH=9022
+#LAN=eth0
+#WAN=eth1
+#WIFI='eth0:0'
+
+#iptables-legacy -A TINYWALL-INPUT -p tcp --dport $SSH -i $LAN -j ACCEPT
+
+exit 0

@@ -1,0 +1,8 @@
+#!/bin/sh
+
+iptables-legacy -F -t nat
+iptables-legacy -F
+
+iptables-legacy-restore < /etc/tinywall/initstate
+
+/etc/tinywall/rules

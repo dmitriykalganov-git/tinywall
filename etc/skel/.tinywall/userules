@@ -1,0 +1,24 @@
+#!/bin/bash
+modprobe nf_conntrack
+modprobe nf_conntrack_amanda
+modprobe nf_conntrack_ftp
+modprobe nf_conntrack_h323
+modprobe nf_conntrack_irc
+modprobe nf_conntrack_netbios_ns
+modprobe nf_conntrack_netlink
+modprobe nf_conntrack_pptp
+modprobe nf_conntrack_proto_dccp
+modprobe nf_conntrack_proto_gre
+modprobe nf_conntrack_proto_sctp
+modprobe nf_conntrack_proto_udplite
+modprobe nf_conntrack_sane
+modprobe nf_conntrack_sip
+modprobe nf_conntrack_tftp
+modprobe xt_conntrack
+
+iptables-legacy -F TINYWALL-INPUT
+iptables-legacy -F TINYWALL-FORW
+iptables-legacy -F TINYWALL-OUTPUT
+
+# Uncomment to disable output activity check
+#iptables -A TINYWALL-OUTPUT -j ACCEPT

@@ -1,0 +1,10 @@
+Package: tinywall
+Maintainer: Pavel V Samsonov <pvsamsonov76@gmail.com>
+Architecture: all
+Recommends: zenity
+Version: 2.5
+Section: network
+Priority: optional
+Description: Linux personal firewall
+  Linux personal firewall based on iptables-legacy.
+

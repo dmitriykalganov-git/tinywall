@@ -1,0 +1,46 @@
+#!/bin/bash
+#Example: cat /var/log/syslog | grep "WALL" | tinyware-wall-loganalyzer
+#  or tail -f /var/log/syslog | grep "WALL" | tinyware-wall-loganalyzer
+
+TEXTDOMAINDIR=/usr/share/locale
+TEXTDOMAIN=tinyware-wall
+COUNT=0
+
+cat /etc/hosts > /tmp/hostscache
+
+while read string
+do
+    let COUNT=COUNT+1
+    [ ! -z "$DEBUG"  ] && echo "$COUNT $string" > /tmp/tinyware-wall-count.log
+    unset PROTO HPROTO HSPROTO DST SPT
+    export $string 2>/dev/null
+    unset HSRC
+    HSRCFOUND="none"
+    HSRC=`grep "^$SRC\W" /tmp/hostscache | head -n 1 | awk '{print $2}'`
+    [ -n "$HSRC" ] && HSRCFOUND="cache"
+    if [ -z "$HSRC" ]
+    then
+         HSRC=`host -W 3 $SRC 2>/dev/null | grep "domain name pointer" | awk '{ print $5 }'`
+        [ -n "$HSRC" ] && HSRCFOUND="dns"
+    fi
+    HSRC=${HSRC:-$SRC}
+    [ "$HSRCFOUND" == "dns" -o "$HSRCFOUND" == "none" ] && echo "$SRC	$HSRC" >> /tmp/hostscache
+    unset HDST
+    HDSTFOUND="none"
+    HDST=`grep "^$DST\W" /tmp/hostscache | head -n 1 |  awk '{print $2}'`
+    [ -n "$HDST" ] && HDSTFOUND="cache"
+    if [ -z "$HDST" ]
+    then
+        HDST=`host -W3 $DST 2>/dev/null | grep "domain name pointer" |  awk '{print $5}'`
+        [ -n "$HDST" ] && HDSTFOUND="dns"
+    fi
+    HDST=${HDST:-$DST}
+    [ "$HDSTFOUND" == "dns" -o "$HDSTFOUND" == "none" ] && echo "$DST	$HDST" >> /tmp/hostscache
+    HPROTO=`cat /etc/protocols | awk '{print $1,$2,$3, " "}' | grep " $PROTO " | awk '{ print $1 }'`
+    HDPROTO=`grep -i "[[:space:]]$DPT/$PROTO" /etc/services | sed 's/\t/\ /g' | sed 's/\ \ /\ /g'`
+    HSPROTO=`grep -i "[[:space:]]$SPT/$PROTO" /etc/services | sed 's/\t/\ /g'| sed 's/\ \ /\ /g'`
+    HDPROTO=${HDPROTO:-"$DPT/$HPROTO"}
+    HSPROTO=${HSPROTO:-"$SPT/$HPROTO"}
+    set $string
+    echo "$CHAIN; $HDST; ($HDPROTO); <===; $HSRC; ($HSPROTO); /$1 $2 $3/; ($DST<=$SRC)"
+done

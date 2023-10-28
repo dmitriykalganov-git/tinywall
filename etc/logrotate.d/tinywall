@@ -1,0 +1,10 @@
+/var/log/tinywall
+{
+	rotate 48
+	weekly
+	missingok
+	notifempty
+	compress
+	delaycompress
+	sharedscripts
+}

@@ -1,0 +1,86 @@
+#: tinyware-wall:5
+msgid "TinyWall must be started by:"
+msgstr "TinyWall необходимо запускать командой:"
+#: tinyware-wall:9
+msgid "Starting TinyWare Wall"
+msgstr "Стартуем TinyWare Wall"
+#: tinyware-wall:11
+msgid "Data stored in:"
+msgstr "Данные хранятся в:"
+#: tinyware-wall:15
+msgid "Please run 'cp -r /etc/skel/.tinyware-wall ~/' as user"
+msgstr "Пожалуйста выполните 'cp -r /etc/skel/.tinyware-wall ~/' от пользователя"
+#: tinyware-wall:21
+msgid "Test UI"
+msgstr "Тест UI"
+msgid "Learn?"
+msgstr "Обучать?"
+#: tinyware-wall:26
+msgid "Learn mode..."
+msgstr "Режим обучения..."
+#: tinyware-wall:89
+msgid "Alredy"
+msgstr "Уже"
+msgid "Permit domain"
+msgstr "Принять домен"
+msgid "Decline domain"
+msgstr "Отказать домен"
+#: tinyware-wall:99
+msgid "Reject IP"
+msgstr "Запретить IP"
+#: tinyware-wall:100
+msgid "Accept IP"
+msgstr "Разрешить IP"
+#: tinyware-wall:101
+msgid "Stop learn"
+msgstr "Стоп обучение"
+#: tinyware-wall:107
+msgid "New"
+msgstr "Новое"
+msgid "Press to continue learn: "
+msgstr "Нажмите чтобы обучение продолжилось: "
+#: /home/pavel/tinyware-wall:70
+msgid "Skipped as regexp"
+msgstr "Пропущено как regexp"
+#: /home/pavel/tinyware-wall:73
+msgid "New as regexp"
+msgstr "Новое как regexp"
+#: ../../../../bin/tinyware-wall:14
+msgid "UI: "
+msgstr "UI: "
+#: ../../../../bin/tinyware-wall:16
+msgid "Zenity not found, back to comandline"
+msgstr "Zenity не найдено, возвращаемся в командную строку"
+#: ../../../../bin/tinyware-wall:26
+msgid "Learn? (y|n): "
+msgstr "Обучать? (д|н): "
+msgid "y"
+msgstr "д"
+msgid "n"
+msgstr "н"
+#: ../../../../bin/tinyware-wall:85
+msgid "$HSRC => $HDST ($HPROTO) R-Reject IP, A-Accept IP, S-Stop learn: "
+msgstr "$HSRC => $HDST ($HPROTO) З-Запретить IP, Р-Разрешить IP, С-Стоп обучение: "
+msgid "P"
+msgstr "П"
+msgid "D"
+msgstr "О"
+#: ../../../../bin/tinyware-wall:89
+msgid "R"
+msgstr "З"
+#: ../../../../bin/tinyware-wall:90
+msgid "A"
+msgstr "Р"
+#: ../../../../bin/tinyware-wall:91
+msgid "S"
+msgstr "С"
+msgid "Reset rules?"
+msgstr "Обнулить правила?"
+msgid "Reset rules? (y|n): "
+msgstr "Обнулить правила? (д|н): "
+msgid "For GUI we need zenity package."
+msgstr "Для графического интерфейса нам требуencz пакет zenity."
+msgid "Reset current iptables state?"
+msgstr "Сбросить состояние iptables?"
+msgid "Reset current iptables state? (y|n): "
+msgstr "Сбросить состояние iptables? (д|н): "

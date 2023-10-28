@@ -1,0 +1,140 @@
+#!/bin/bash
+umask 007
+TEXTDOMAINDIR=/usr/share/locale
+TEXTDOMAIN=tinywall
+
+PATH=$PATH:/sbin:/usr/sbin
+IPTABLES=iptables-legacy
+
+echo $"TinyWall must be started by:"
+echo "sudo -E tinywall"
+echo "***********************"
+echo $"Starting TinyWall"
+echo "***********************"
+echo $"Data stored in:" ~/.tinywall
+zenity --info --text $"Test UI" 2>/dev/null && UI="zenity" || UI="cmd" && echo $"For GUI we need zenity and wmctrl packages."
+echo $"UI:"$UI
+
+
+cp -rua /etc/skel/.tinywall ~/
+GROUP=`stat --printf "%g" $HOME`
+chgrp -R $GROUP ~/.tinywall
+chmod -R gu+rwx ~/.tinywall
+cp -u ~/.tinywall/userules ~/.tinywall/userules.back
+cp -u ~/.tinywall/permitdomains ~/.tinywall/permitdomains.back
+cp -u ~/.tinywall/declinedomains ~/.tinywall/declinedomains.back
+
+$IPTABLES-restore < /etc/tinywall/initstate
+. ~/.tinywall/userules
+
+if [ "$UI" = "zenity" ] 
+then
+    zenity --question --title $"TinyWall" --text $"Learn?" || exit 1
+else
+    read -p $"Learn? (y|n): " ACTION && [ "$ACTION" = $"y" ] || exit 1
+fi
+
+echo $"Learn mode..."
+
+cat /etc/hosts > /tmp/hostscache
+
+tail -n 1 -f /var/log/syslog | while read string
+do
+    echo $string | grep "TINYWALL.*REJECT" > /dev/null || continue
+    unset PROTO HPROTO HSPROTO DST SPT
+    export $string 2>/dev/null
+    CHAIN=${CHAIN%-REJECT}
+    $IPTABLES-save | grep -i "\-A\ $CHAIN.*[\ ]*\-s\ $SRC\/32[\ ]*\ \-d\ $DST\/32.*\ $PROTO\ .*--dport\ $DPT" 2>/dev/null && \
+    echo $"Alredy" && continue
+    unset HSRC
+    HSRCFOUND="none"
+    HSRC=`grep "^$SRC\W" /etc/hosts | awk '{print $2}'`
+    [ -n "$HSRC" -a "$HSRCFOUND"=="none" ] && HSRCFOUND="hosts"
+    if [ -z "$HSRC" ]
+    then
+        HSRC=`grep "^$SRC\W" /tmp/hostscache | head -n 1 | awk '{print $2}'`
+        [ -n "$HSRC" ] && HSRCFOUND="cache"
+    fi
+    if [ -z "$HSRC" ]
+    then
+        HSRC=`host -W 3 $SRC 2>/dev/null | grep "domain name pointer" | head -n 1 | awk '{ print $5 }'`
+        [ -n "$HSRC" ] && HSRCFOUND="dns"
+    fi
+    HSRC=${HSRC:-$SRC}
+    [ "$HSRCFOUND" == "dns" -o "$HSRCFOUND" == "none" ] && echo "$SRC	$HSRC" >> /tmp/hostscache
+    unset HDST
+    HDSTFOUND="none"
+    HDST=`grep "^$DST\W" /etc/hosts | awk '{print $2}'`
+    [ -n "$HDST" ] && HDSTFOUND="hosts"
+    if [ -z "$HDST" ]
+    then
+        HDST=`grep "^$DST\W" /tmp/hostscache | head -n 1 | awk '{print $2}'`
+        [ -n "$HDST" ] && HDSTFOUND="cache"
+    fi
+    if [ -z "$HDST" ]
+    then
+        HDST=`host -W3 $DST 2>/dev/null | grep "domain name pointer" | head -n 1 | awk '{ print $5 }'`
+        [ -n "$HDST" ] && HDSTFOUND="dns"
+    fi
+    HDST=${HDST:-$DST}
+    [ "$HDSTFOUND" == "dns" -o "$HDSTFOUND" == "none" ] && echo "$DST	$HDST" >> /tmp/hostscache
+    PROTO=`cat /etc/protocols | awk '{print $1,$2,$3, " "}' | grep " $PROTO " | awk '{ print $1 }'`
+    HPROTO=`grep -i "[[:space:]]$DPT/$PROTO" /etc/services | sed 's/\t/\ /g' | sed 's/\ \ /\ /g'`
+    HPROTO=${HPROTO:-"$DPT/$PROTO"}
+    unset IHSRC IHDST ISRC IDST IDPT IPROTO
+    [ -z "$SRC" ] || ISRC="-s $SRC"
+    [ -z "$DST" ] || IDST="-d $DST"
+    [ -z "$DPT" ] || IDPT="--dport $DPT"
+    [ -z "$HSRC" ] || IHSRC="-s $HSRC"
+    [ -z "$HDST" ] || IHDST="-d $HDST"
+    IPROTO="-p $PROTO"
+    COMMAND=""
+    ACTION=""
+    RULE=""
+    AUTOMATIC="manual"
+    [ "$?" = "1" ] && continue
+    echo "$HDST" | grep -f ~/.tinywall/permitdomains > /dev/null
+    if [ "$?" = "0" ]
+    then
+        AUTOMATIC="domain"
+        ACTION=$"Accept IP"
+    fi
+    echo "$HDST" | grep -f ~/.tinywall/declinedomains > /dev/null
+    if [ "$?" = "0" ]
+    then
+        AUTOMATIC="domain"
+        ACTION=$"Reject IP"
+    fi
+    if [ "$AUTOMATIC" = "manual" ]
+    then
+        if [ "$UI" = "zenity" ]
+        then
+	    ACTION=`zenity --list --title $"TinyWall" --text "$HSRC => $HDST ($HPROTO)" \
+	        --timeout=10 --column $"Select action" $"Permit domain" $"Decline domain" $"Accept IP" $"Reject IP" $"Stop learn" 2>/dev/null`
+        else
+	    read -t 13 -p $"$HSRC => $HDST ($HPROTO) R-Reject IP, A-Accept IP, S-Stop learn: " ACTION < /dev/tty || echo ""
+        fi
+    fi
+    ACTION=${ACTION:0:1}
+    COMMAND=""
+    DOMAIN=""
+    [ "$ACTION" = $"R" ] && COMMAND="$IPTABLES -A $CHAIN $IPROTO $ISRC $IDST $IDPT -j REJECT"
+    [ "$ACTION" = $"A" ] && COMMAND="$IPTABLES -A $CHAIN $IPROTO $ISRC $IDST $IDPT -j ACCEPT"
+    [ "$ACTION" = $"P" ] && DOMAIN=`zenity --entry --entry-text "$HDST"`
+    [ "$ACTION" = $"D" ] && DOMAIN=`zenity --entry --entry-text "$HDST"`
+    [ "$ACTION" = $"S" ] && exit 2
+    if [ ! -z "$DOMAIN" ]
+    then
+        [ "$ACTION" == $"P" ] && echo ".*$DOMAIN" >> ~/.tinywall/permitdomains
+        [ "$ACTION" == $"D" ] && echo ".*$DOMAIN" >> ~/.tinywall/declinedomains
+        continue
+    fi
+    [ "$COMMAND" = "" ] && continue
+    $COMMAND && echo "$COMMAND # $AUTOMATIC($HSRC=>$HDST) `date`" >> ~/.tinywall/userules && echo "$COMMAND" && echo $"New $AUTOMATIC($HSRC=>$HDST)"
+done
+if [ "$UI" = "zenity" ] 
+then
+    zenity --question --title $"TinyWall" --text $"Reset current $IPTABLES state?" && $IPTABLES -F
+else
+    read -p $"Reset current $IPTABLES state? (y|n): " ACTION && [ "$ACTION" = $"y" ] && $IPTABLES -F
+fi

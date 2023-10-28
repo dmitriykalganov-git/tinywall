@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Application
+Terminal=true
+Exec=sudo -E tinyware-wall
+Name=tinyware-wall
+Comment=Personal interactive network filter
+Categories=Internet
+Icon=tinyware-wall.svg
+
+
